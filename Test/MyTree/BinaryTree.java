@@ -6,7 +6,6 @@ public class BinaryTree<E>{
         root = null;
     }
 
-    
     public void makeEmpty(){
         root = null;
     }
