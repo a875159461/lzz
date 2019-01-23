@@ -1,3 +1,5 @@
+package myheap;
+
 import java.util.*;
 public class BinaryHeap<E extends Comparable<? super E>>{
     private E[] array;
@@ -80,7 +82,7 @@ public class BinaryHeap<E extends Comparable<? super E>>{
         array[hole] = tmp;
     }
 
-    private void buildHeap(){
+    public void buildHeap(){
         for(int i = currentSize / 2; i > 0; i--)
             percolateDown(i);
     }

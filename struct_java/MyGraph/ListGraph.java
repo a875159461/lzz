@@ -1,6 +1,8 @@
 import java.util.*;
+import mydisj.*;
 interface Graph<V>{
     public static final int ITERATOR_ISBFS = 0;
+    public static final int ITERATOR_ISDFS = 1;
 
     public int add(V v);
 
@@ -19,7 +21,7 @@ interface Graph<V>{
     public void convertDAG();
 }
 
-class Edge<V>{
+class Edge<V> implements Comparable<Edge>{
     private V src;
     private V dest;
     private double weight;
@@ -49,6 +51,15 @@ class Edge<V>{
     public String toString(){
         String ret = String.format("src : %s, dest : %s, weight : %s", src, dest, weight);
         return ret;
+    }
+
+    @Override
+    public int compareTo(Edge e) {
+        if (weight > e.weight)
+            return 1;
+        else if (weight < e.weight)
+            return -1;
+        return 0;
     }
 }
 
@@ -90,7 +101,7 @@ public class ListGraph<V> implements Graph<V>{
             ret = tmp.v;
         }
 
-        removeRelatedEdge(v);
+        // removeRelatedEdge(v);
         return ret;
     }
 
@@ -112,7 +123,7 @@ public class ListGraph<V> implements Graph<V>{
             AdList vlist = adList.get(index);
             if(vlist != null) {
                 ret = vlist.v;
-                System.out.printf("get , index : %s , v : %s", index, ret);
+                System.out.printf("get , index : %s , v : %s \n", index, ret);
             }
         }
         return ret;
@@ -134,9 +145,9 @@ public class ListGraph<V> implements Graph<V>{
 
     @Override
     public Iterator<V> iterator(int type, V root){
-        if(ITERATOR_ISBFS == 1)
+        if(type == ITERATOR_ISBFS)
             return new BFSIterator(root);
-        return new BFSIterator(root); //
+        return new DFSIterator(root); //
     }
 
     @Override
@@ -144,6 +155,40 @@ public class ListGraph<V> implements Graph<V>{
 
     }
 
+    public List<Edge<V>> kruskal(){ //seen as undirected graph
+        DisjSets ds = new DisjSets(adList.size());
+        PriorityQueue<Edge<V>> pq = new PriorityQueue<>();
+        List<Edge<V>> mst = new ArrayList();
+
+        for(AdList list: adList){
+            for(Edge<V> e: list.edgeList)
+                pq.add(e);
+        }
+
+        while(mst.size() != adList.size() - 1){
+            Edge<V> e = pq.remove();
+            int uset = ds.find(getIndexOfVertex(e.getSource()));
+            int vset = ds.find(getIndexOfVertex(e.getDest()));
+            if(uset != vset){
+                mst.add(e);
+                ds.union(uset, vset);
+            }
+        }
+        return mst;
+    }
+
+    private int getIndexOfVertex(V v){
+        int ret = -1;
+        if(v != null){
+            for(AdList vlist: adList){
+                if(v.equals(vlist.v)){
+                    ret = adList.indexOf(vlist);
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
 
     private AdList getVertexList(V v){
         AdList ret = null;
@@ -163,7 +208,7 @@ public class ListGraph<V> implements Graph<V>{
         if(v != null){
             for(AdList vlist: adList){
                 if(v.equals(vlist.v)){
-                    System.out.printf("remove Vertex and its'List %s", v);
+                    System.out.printf("remove Vertex and its'List %s \n", v);
                     ret = vlist;
                     adList.remove(vlist);
                     break;
@@ -217,6 +262,43 @@ public class ListGraph<V> implements Graph<V>{
         }
     }
 
+    private class DFSIterator implements Iterator<V>{
+        private List<V> visitedVertex = null;
+        private LinkedList<V> stack = null;
+
+        private DFSIterator(V root){
+            visitedVertex = new LinkedList<>();
+            stack = new LinkedList<>();
+
+            stack.addFirst(root);
+        }
+
+        public boolean hasNext(){
+            if(stack.size() > 0)
+                return true;
+            return false;
+        }
+
+        public V next(){
+            V v = stack.removeFirst();
+            AdList vlist = getVertexList(v);
+            if(vlist != null){
+                List<Edge<V>> list = vlist.edgeList;
+                for(Edge<V> edge: list){
+                    V dest = edge.getDest();
+                    if(!inList(dest, visitedVertex.iterator()) && !inList(dest, stack.iterator()))
+                        stack.addFirst(dest);
+                }
+            }
+            visitedVertex.add(v);
+            return v;
+        }
+
+        public void remove(){
+
+        }
+    }
+
     private boolean inList(V v, Iterator<V> it){
         while(it.hasNext()){
             V tmp = it.next();
@@ -235,7 +317,7 @@ public class ListGraph<V> implements Graph<V>{
         public AdList(V v){
             this.v = v;
             this.edgeList = new LinkedList<Edge<V>>();
-            System.out.printf("AdList");
+            System.out.printf("add vertex %s \n", v);
         }
 
         public String toString(){
@@ -244,7 +326,7 @@ public class ListGraph<V> implements Graph<V>{
         }
 
         public void addEdge(Edge<V> e){
-            System.out.printf("add edge : %s", e);
+            System.out.printf("add edge : %s \n", e);
             if(getEdge(e.getDest()) == null)
                 edgeList.add(e);
             else
@@ -275,7 +357,7 @@ public class ListGraph<V> implements Graph<V>{
     }
 
     public static void main(String[] args){
-        Graph<String> mDG = new ListGraph<String>();
+        ListGraph<String> mDG = new ListGraph<String>();
         System.out.println("===============add v=================");
         
         mDG.add("1"); mDG.add("2"); mDG.add("3"); mDG.add("4");
@@ -283,41 +365,46 @@ public class ListGraph<V> implements Graph<V>{
 
         System.out.println("===============add edge=================");
         
-        mDG.add(new Edge<String>("1", "2")); mDG.add(new Edge<String>("1", "3"));
-        mDG.add(new Edge<String>("2", "4")); mDG.add(new Edge<String>("2", "5"));
-        mDG.add(new Edge<String>("3", "6")); mDG.add(new Edge<String>("3", "7"));
-        mDG.add(new Edge<String>("4", "8")); mDG.add(new Edge<String>("8", "5"));
-        mDG.add(new Edge<String>("6", "7"));
+        mDG.add(new Edge<String>("1", "2",10)); mDG.add(new Edge<String>("1", "3",2));
+        mDG.add(new Edge<String>("2", "5",3)); mDG.add(new Edge<String>("2", "4",4));
+        mDG.add(new Edge<String>("3", "6",11)); mDG.add(new Edge<String>("3", "7",6));
+        mDG.add(new Edge<String>("4", "8",7)); mDG.add(new Edge<String>("8", "5",8));
+        mDG.add(new Edge<String>("6", "7",9));
+
+        List<Edge<String>> elist = mDG.kruskal();
+        for(Edge<String> e:elist)
+            System.out.println(e);
+
         
-        System.out.println("===============test travelling=================");
+        // System.out.println("===============test travelling=================");
         
-        Iterator<String> it = mDG.iterator(Graph.ITERATOR_ISBFS, "1");
-        while(it.hasNext()) {
-            String s = it.next();
-            System.out.printf("next : %s", s);
-        }
+        // Iterator<String> it = mDG.iterator(Graph.ITERATOR_ISBFS, "1");
+        // while(it.hasNext()) {
+        //     String s = it.next();
+        //     System.out.printf("next : %s ", s);
+        // }
         
-        System.out.println("===============test travelling2=================");
+        // System.out.println("\n===============test travelling2=================");
         
-        it = mDG.iterator(Graph.ITERATOR_ISBFS, "2");
-        while(it.hasNext()) {
-            String s = it.next();
-            System.out.printf("next : %s", s);
-        }
+        // it = mDG.iterator(Graph.ITERATOR_ISDFS, "2");
+        // while(it.hasNext()) {
+        //     String s = it.next();
+        //     System.out.printf("next : %s ", s);
+        // }
         
-        System.out.println("===============test others=================");
+        // System.out.println("\n===============test others=================");
         
-        mDG.get(0);
+        // mDG.get(0);
         
-        System.out.println(mDG.get(0, 1));
+        // System.out.println(mDG.get(0, 1));
         
-        mDG.remove("6");
+        // mDG.remove("6");
         
-        mDG.remove(new Edge<String>("3", "7"));
-        it = mDG.iterator(Graph.ITERATOR_ISBFS, "1");
-        while(it.hasNext()) {
-            String s = it.next();
-            System.out.printf("next : %s", s);
-        }
+        // mDG.remove(new Edge<String>("3", "7"));
+        // it = mDG.iterator(Graph.ITERATOR_ISBFS, "1");
+        // while(it.hasNext()) {
+        //     String s = it.next();
+        //     System.out.printf("next : %s", s);
+        // }
     }
 }

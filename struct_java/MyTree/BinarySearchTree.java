@@ -222,3 +222,38 @@ public class BinarySearchTree<E extends Comparable<? super E>>{
         // }
     }
 }
+
+
+    // * 二叉树中第K层结点的个数(根位于第0层)
+    // public int k_nodes(int k){
+    //     if(k < 0)
+    //         return 0;
+    //     return k_nodes(root, k);
+    // }
+    // private int k_nodes(BinaryNode<T> root, int k){
+    //     if(root == null)
+    //         return 0;
+    //     if(k == 0)
+    //         return 1;//根结点
+    //     else
+    //         return k_nodes(root.left, k-1) + k_nodes(root.right, k-1);
+    // }
+
+
+    //  * 求解node1 和 node2 的最低公共父结点
+    // public BinaryNode<T> commonNode(BinaryNode<T> node1, BinaryNode<T> node2, BinaryNode<T> root){
+    //     if(root == null)
+    //         return null;
+    //     if(node1.element == root.element || node2.element == root.element)
+    //         return root;
+    //     /*
+    //      * 若 left==null, node1,node2 都不在 root.left子树中
+    //      * 若right==null,node1,node2 都不在root.right子树中
+    //      */
+    //     BinaryNode<T> left = commonNode(node1, node2, root.left);
+    //     BinaryNode<T> right = commonNode(node1, node2, root.right);
+        
+    //     if(left != null && right != null)
+    //         return root;
+    //     return left == null ? right : left;
+    // }
