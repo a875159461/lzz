@@ -1,3 +1,3 @@
 $$
-    r_{s,i} = supp_{s,i} + \\frac{supp_i}{(1+supp_i)}
+    s_{i,j}=\sum_{s}I\{(s,i)\in D & (s,j)\in D\} / (supp_i+\\lambda)^{\\alpha}(supp_j+\\lambda)^{1-\\alpha}
 $$
